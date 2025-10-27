@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RCOC — Service, Retirement, Vacation, Stipend & Retention</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- car that cruises along the viewport border -->
+  <div class="car" aria-hidden="true" title="Beep beep!">
+    <svg viewBox="0 0 200 110">
+      <rect x="10" y="50" width="160" height="30" rx="6" fill="#2E86DE"/>
+      <polygon points="60,50 130,50 120,25 70,25" fill="#2E86DE"/>
+      <rect x="78" y="30" width="35" height="16" fill="#AEE1F9"/>
+      <rect x="116" y="30" width="35" height="16" fill="#AEE1F9"/>
+      <circle cx="55" cy="85" r="13" fill="#111" stroke="#444" stroke-width="4"/>
+      <circle cx="130" cy="85" r="13" fill="#111" stroke="#444" stroke-width="4"/>
+      <ellipse cx="165" cy="38" rx="8" ry="12" fill="#FFD166"/>
+    </svg>
+  </div>
+
+  <!-- faded grayscale logo behind content (auto-loads logo.png) -->
+  <div id="logoBg">
+    <img id="bgLogo" alt="Background logo" />
+  </div>
+
+  <div class="wrap">
+    <header class="site">
+      <h1>RCOC — Service, Retirement, Vacation, Stipend &amp; Retention</h1>
+      <span class="badge">Web Edition</span>
+    </header>
+
+    <main class="content">
+      <!-- Setup -->
+      <div class="panel" id="setup">
+        <div class="section-title">Setup</div>
+        <div class="divider"></div>
+
+        <div class="grid cols-3">
+          <div>
+            <label>Status</label>
+            <div class="row">
+              <label class="pill"><input type="radio" name="status" value="nonrep" checked> Non-Rep (Management)</label>
+              <label class="pill"><input type="radio" name="status" value="rep"> Rep (Bargaining Unit)</label>
+            </div>
+          </div>
+
+          <div>
+            <label>Retirement Tier</label>
+            <div class="row">
+              <label class="pill"><input type="radio" name="tier" value="I" checked> Tier I</label>
+              <label class="pill"><input type="radio" name="tier" value="II"> Tier II</label>
+            </div>
+          </div>
+
+          <div>
+            <label>PE License</label>
+            <div class="row">
+              <label class="pill"><input type="checkbox" id="hasPE"> I currently hold a PE license</label>
+            </div>
+          </div>
+
+          <div>
+            <label>Birth date</label>
+            <input id="birthDate" type="date" />
+            <div class="hint">Use the picker or YYYY-MM-DD</div>
+          </div>
+
+          <div>
+            <label>Hire date</label>
+            <input id="hireDate" type="date" />
+            <div class="hint">Use the picker or YYYY-MM-DD</div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <button class="btn" id="startBtn">Start Dashboard</button>
+        </div>
+      </div>
+
+      <!-- Dashboard -->
+      <div id="dashboard" style="display:none">
+        <!-- Retirement -->
+        <div class="panel">
+          <div class="section-title">RETIREMENT</div>
+          <div class="divider"></div>
+
+          <div class="pair">
+            <div class="box">
+              <div class="k service pulse service stat" id="yos">—</div>
+              <div class="sub">Years of Service (live)</div>
+            </div>
+            <div class="box">
+              <div class="k retire pulse retire stat" id="retireCountdown">—</div>
+              <div class="sub" id="retireCaption">Countdown to Retirement (Tier —)</div>
+            </div>
+          </div>
+
+          <div class="pair" style="margin-top:10px">
+            <div class="box">
+              <div class="k vesting stat" id="vesting">—</div>
+              <div class="sub" id="vestingDate">Vesting Date: —</div>
+            </div>
+            <div class="box">
+              <div class="k stat" style="color:#ccc" id="eligDateLine">Retirement Eligibility Date: —</div>
+            </div>
+          </div>
+
+          <div class="pair" style="margin-top:10px">
+            <div class="box">
+              <div class="k death stat" id="deathNow">—</div>
+              <div class="sub" id="deathRet">—</div>
+              <div class="sub" id="deathNext">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vacation -->
+        <div class="panel">
+          <div class="section-title">VACATION</div>
+          <div class="divider"></div>
+          <div class="k leave" id="leaveLine">—</div>
+          <div class="sub" id="nextLeave">—</div>
+        </div>
+
+        <!-- Stipend & Retention -->
+        <div class="panel">
+          <div class="section-title">STIPEND &amp; RETENTION PAY</div>
+          <div class="divider"></div>
+          <div id="peLine" class="k pe" style="display:none"></div>
+          <div class="k retention" id="retentionLine">—</div>
+          <div class="sub" id="retentionCountdown">—</div>
+          <div class="sub">Retention is paid in October for the period ending Sept 30.</div>
+        </div>
+
+        <!-- Retirement Benefit Estimator -->
+        <div class="panel">
+          <div class="section-title">RETIREMENT BENEFIT ESTIMATOR</div>
+          <div class="divider"></div>
+          <div class="sub">
+            Uses straight-life: Tier I 2.25% × YOS × FAC; Tier II 1.50% × YOS × FAC; capped at 75% of FAC.
+          </div>
+
+          <div class="grid cols-3" style="margin-top:12px">
+            <div>
+              <label><input type="checkbox" id="useEarliest" checked> Use earliest eligibility date</label>
+            </div>
+            <div>
+              <label>Planned retirement date</label>
+              <input id="plannedRet" type="date" disabled />
+            </div>
+            <div>
+              <label>Final Average Compensation (annual $)</label>
+              <input id="fac" type="number" min="0" step="100" placeholder="73500" />
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:12px">
+            <button class="btn" id="estimateBtn">Estimate Benefit</button>
+            <div class="hint">Change FAC or uncheck “Use earliest” to test scenarios</div>
+          </div>
+
+          <div class="pair" style="margin-top:12px">
+            <div class="box">
+              <div class="k benefit" id="annualBen">Annual Benefit: —</div>
+              <div class="k benefit" id="monthlyBen">Monthly Benefit: —</div>
+            </div>
+            <div class="box">
+              <div class="sub mono" id="benDetails"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div class="watermark">RCOC Toolkit v2025.8.2</div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

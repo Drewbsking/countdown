@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>RCOC — Service, Retirement, Vacation, Stipend & Retention</title>
+<style>
+  :root{
+    --bg:#000000;
+    --text:#ffffff;
+    --muted:#cccccc;
+    --watermark:#404040;
+
+    --service:#00ffaa;
+    --vesting:#ffd700;
+    --retire:#ff6666;
+    --leave:#87cefa;
+    --retention:#ffa500;
+    --death:#ba68c8;
+    --pe:#00ced1;
+    --benefit:#98fb98;
+  }
+
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI, system-ui, -apple-system, Arial, sans-serif;}
+  .wrap{min-height:100%;display:flex;flex-direction:column;position:relative;z-index:1}
+  header.site{
+    padding:16px 24px;
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    border-bottom:2px solid #222;
+  }
+  header.site h1{font-size:20px;margin:0;font-weight:700;letter-spacing:.3px}
+  .badge{padding:4px 10px;border-radius:999px;background:#111;color:#aaa;font-size:12px}
+  .content{max-width:1100px;margin:0 auto;padding:18px}
+
+  .panel{
+    background:#0c0c0c;border:1px solid #1c1c1c;border-radius:16px;padding:16px 18px;
+    box-shadow:0 6px 28px rgba(0,0,0,.35); margin-bottom:18px;
+  }
+  .section-title{
+    font-weight:800; letter-spacing:.4px; margin:14px 0 10px; font-size:18px; color:#fff;
+  }
+  .divider{height:2px;background:#2a2a2a;margin:6px 0 12px}
+
+  /* Inputs */
+  .grid{display:grid;gap:12px}
+  .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  @media (max-width:800px){ .grid.cols-2,.grid.cols-3{grid-template-columns:1fr} }
+  label{font-size:12px;color:#aaa;display:block;margin-bottom:6px}
+  input[type="date"],input[type="number"],select{
+    width:100%;background:#101010;border:1px solid #2a2a2a;color:#eee;
+    border-radius:10px;padding:10px 12px;font-size:14px;outline:none;
+  }
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .pill{background:#101010;border:1px solid #2a2a2a;color:#eee;border-radius:999px;padding:8px 14px;cursor:pointer}
+  .pill input{margin-right:8px;accent-color:#09f}
+  .btn{
+    appearance:none;border:0;border-radius:12px;padding:12px 16px;background:#2563eb;
+    color:#fff;font-weight:700;cursor:pointer;box-shadow:0 8px 30px rgba(37,99,235,.35);
+  }
+  .btn.secondary{background:#1f2937}
+  .hint{color:#888;font-size:12px}
+
+  /* Stats */
+  .stat{font-family:Consolas, Menlo, monospace; font-weight:800}
+  .sub{font-size:12px;color:#aaa}
+  .pair{display:flex;gap:14px;flex-wrap:wrap}
+  .pair .box{flex:1 1 320px; background:#0f0f0f;border:1px solid #212121;border-radius:14px;padding:14px}
+  .k{font-size:18px;margin-bottom:6px}
+
+  .k.service{color:var(--service)}
+  .k.retire{color:var(--retire)}
+  .k.vesting{color:var(--vesting)}
+  .k.leave{color:var(--leave)}
+  .k.retention{color:var(--retention)}
+  .k.death{color:var(--death)}
+  .k.pe{color:var(--pe)}
+  .k.benefit{color:var(--benefit)}
+
+  /* Pulsing like the Tk app */
+  @keyframes pulseService{0%{color:var(--service)}100%{color:#fff}}
+  @keyframes pulseRetire{0%{color:var(--retire)}100%{color:#fff}}
+  .pulse.service{animation:pulseService 1s ease-in-out infinite alternate}
+  .pulse.retire{animation:pulseRetire 1s ease-in-out infinite alternate}
+
+  /* Watermark & optional logo */
+  .watermark{
+    position:fixed;bottom:8px;right:10px;color:var(--watermark);
+    font-style:italic;font-size:12px;pointer-events:none;z-index:0
+  }
+  #logoBg{
+    position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:0;
+    pointer-events:none;opacity:.13;filter:grayscale(100%);
+  }
+  #logoBg img{max-width:60vmin;max-height:60vmin;object-fit:contain}
+
+  /* Car around the border */
+  .car{
+    position:fixed;top:6px;left:6px;width:54px;height:30px;z-index:9999;pointer-events:none;
+    display:grid;place-items:center;font-size:26px;transform-origin:center center;
+    text-shadow:0 3px 10px rgba(0,0,0,.5);
+    animation:drive 22s linear infinite;
+  }
+  .car svg{width:100%;height:100%}
+  @keyframes drive{
+    0%   {top:6px;left:6px;transform:rotate(0deg);}
+    24.9%{top:6px;left:calc(100vw - 60px);transform:rotate(0deg);}
+    25%  {top:6px;left:calc(100vw - 60px);transform:rotate(90deg);}
+    49.9%{top:calc(100vh - 40px);left:calc(100vw - 60px);transform:rotate(90deg);}
+    50%  {top:calc(100vh - 40px);left:calc(100vw - 60px);transform:rotate(180deg);}
+    74.9%{top:calc(100vh - 40px);left:6px;transform:rotate(180deg);}
+    75%  {top:calc(100vh - 40px);left:6px;transform:rotate(270deg);}
+    99.9%{top:6px;left:6px;transform:rotate(270deg);}
+    100% {top:6px;left:6px;transform:rotate(360deg);}
+  }
+
+  /* Benefit details */
+  .mono{font-family:Consolas, Menlo, monospace}
+</style>
+</head>
+<body>
+  <!-- the car that circles the edges -->
+  <div class="car" aria-hidden="true" title="Beep beep!">
+    <!-- tiny SVG car (keeps it crisp); feel free to swap for 🚗 emoji -->
+    <svg viewBox="0 0 200 110">
+      <rect x="10" y="50" width="160" height="30" rx="6" fill="#2E86DE"/>
+      <polygon points="60,50 130,50 120,25 70,25" fill="#2E86DE"/>
+      <rect x="78" y="30" width="35" height="16" fill="#AEE1F9"/>
+      <rect x="116" y="30" width="35" height="16" fill="#AEE1F9"/>
+      <circle cx="55" cy="85" r="13" fill="#111" stroke="#444" stroke-width="4"/>
+      <circle cx="130" cy="85" r="13" fill="#111" stroke="#444" stroke-width="4"/>
+      <ellipse cx="165" cy="38" rx="8" ry="12" fill="#FFD166"/>
+    </svg>
+  </div>
+
+  <div id="logoBg"></div>
+
+  <div class="wrap">
+    <header class="site">
+      <h1>RCOC — Service, Retirement, Vacation, Stipend &amp; Retention</h1>
+      <span class="badge">Web Edition</span>
+      <div style="flex:1"></div>
+      <label class="pill"><input type="checkbox" id="toggleLogo"> Show faded logo</label>
+      <input type="file" id="logoFile" accept="image/*" style="display:none" />
+      <button class="btn secondary" id="pickLogo" title="Upload a logo to use as a faded background" style="display:none">Choose Logo</button>
+    </header>
+
+    <main class="content">
+      <!-- Setup -->
+      <div class="panel" id="setup">
+        <div class="section-title">Setup</div>
+        <div class="divider"></div>
+
+        <div class="grid cols-3">
+          <div>
+            <label>Status</label>
+            <div class="row">
+              <label class="pill"><input type="radio" name="status" value="nonrep" checked> Non-Rep (Management)</label>
+              <label class="pill"><input type="radio" name="status" value="rep"> Rep (Bargaining Unit)</label>
+            </div>
+          </div>
+
+          <div>
+            <label>Retirement Tier</label>
+            <div class="row">
+              <label class="pill"><input type="radio" name="tier" value="I" checked> Tier I</label>
+              <label class="pill"><input type="radio" name="tier" value="II"> Tier II</label>
+            </div>
+          </div>
+
+          <div>
+            <label>PE License</label>
+            <div class="row">
+              <label class="pill"><input type="checkbox" id="hasPE"> I currently hold a PE license</label>
+            </div>
+          </div>
+
+          <div>
+            <label>Birth date</label>
+            <input id="birthDate" type="date" />
+            <div class="hint">MM/DD/YYYY or use the picker</div>
+          </div>
+
+          <div>
+            <label>Hire date</label>
+            <input id="hireDate" type="date" />
+            <div class="hint">MM/DD/YYYY or use the picker</div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <button class="btn" id="startBtn">Start Dashboard</button>
+        </div>
+      </div>
+
+      <!-- Dashboard -->
+      <div id="dashboard" style="display:none">
+        <!-- Retirement -->
+        <div class="panel">
+          <div class="section-title">RETIREMENT</div>
+          <div class="divider"></div>
+
+          <div class="pair">
+            <div class="box">
+              <div class="k service pulse service stat" id="yos">—</div>
+              <div class="sub">Years of Service (live)</div>
+            </div>
+            <div class="box">
+              <div class="k retire pulse retire stat" id="retireCountdown">—</div>
+              <div class="sub" id="retireCaption">Countdown to Retirement (Tier —)</div>
+            </div>
+          </div>
+
+          <div class="pair" style="margin-top:10px">
+            <div class="box">
+              <div class="k vesting stat" id="vesting">—</div>
+              <div class="sub" id="vestingDate">Vesting Date: —</div>
+            </div>
+            <div class="box">
+              <div class="k stat" style="color:#ccc" id="eligDateLine">Retirement Eligibility Date: —</div>
+            </div>
+          </div>
+
+          <div class="pair" style="margin-top:10px">
+            <div class="box">
+              <div class="k death stat" id="deathNow">—</div>
+              <div class="sub" id="deathRet">—</div>
+              <div class="sub" id="deathNext">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vacation -->
+        <div class="panel">
+          <div class="section-title">VACATION</div>
+          <div class="divider"></div>
+          <div class="k leave" id="leaveLine">—</div>
+          <div class="sub" id="nextLeave">—</div>
+        </div>
+
+        <!-- Stipend & Retention -->
+        <div class="panel">
+          <div class="section-title">STIPEND &amp; RETENTION PAY</div>
+          <div class="divider"></div>
+          <div id="peLine" class="k pe" style="display:none"></div>
+          <div class="k retention" id="retentionLine">—</div>
+          <div class="sub" id="retentionCountdown">—</div>
+          <div class="sub">Retention is paid in October for the period ending Sept 30.</div>
+        </div>
+
+        <!-- Retirement Benefit Estimator -->
+        <div class="panel">
+          <div class="section-title">RETIREMENT BENEFIT ESTIMATOR</div>
+          <div class="divider"></div>
+          <div class="sub">
+            Uses straight-life: Tier I 2.25% × YOS × FAC; Tier II 1.50% × YOS × FAC; capped at 75% of FAC.
+          </div>
+
+          <div class="grid cols-3" style="margin-top:12px">
+            <div>
+              <label><input type="checkbox" id="useEarliest" checked> Use earliest eligibility date</label>
+            </div>
+            <div>
+              <label>Planned retirement date</label>
+              <input id="plannedRet" type="date" disabled />
+            </div>
+            <div>
+              <label>Final Average Compensation (annual $)</label>
+              <input id="fac" type="number" min="0" step="100" placeholder="73500" />
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:12px">
+            <button class="btn" id="estimateBtn">Estimate Benefit</button>
+            <div class="hint">Tip: change FAC or uncheck “Use earliest” to test scenarios</div>
+          </div>
+
+          <div class="pair" style="margin-top:12px">
+            <div class="box">
+              <div class="k benefit" id="annualBen">Annual Benefit: —</div>
+              <div class="k benefit" id="monthlyBen">Monthly Benefit: —</div>
+            </div>
+            <div class="box">
+              <div class="sub mono" id="benDetails"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div class="watermark">RCOC Toolkit v2025.8.2</div>
+  </div>
+
+<script>
+/* ------------------- Utilities ------------------- */
+const fmtDate = (d, withYear=true) => {
+  if (!d) return "—";
+  return d.toLocaleDateString(undefined, {year: withYear?'numeric':undefined, month:'short', day:'2-digit'});
+};
+const fmtDateLong = (d) => d.toLocaleDateString(undefined, {weekday:'long', year:'numeric', month:'long', day:'2-digit'});
+const $ = (sel)=>document.querySelector(sel);
+const $$=(sel)=>Array.from(document.querySelectorAll(sel));
+const money = (v)=> new Intl.NumberFormat(undefined,{style:'currency',currency:'USD',maximumFractionDigits:0}).format(v);
+const money2 = (v)=> new Intl.NumberFormat(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2}).format(v);
+function addYears(date, n){ const d=new Date(date); d.setFullYear(d.getFullYear()+n); return d; }
+function maxDate(a,b){ return (a>b)?a:b; }
+function minDate(a,b){ return (a<b)?a:b; }
+
+/* Relativedelta-like y/m/d + time, accurate by carrying months */
+function diffYMDHMSMs(start, end){
+  // assumes end >= start for our uses; if not, swap and note sign
+  let sign = 1;
+  let s = new Date(start), e = new Date(end);
+  if (e < s){ sign = -1; [s,e] = [e,s]; }
+
+  let years = e.getFullYear() - s.getFullYear();
+  let t = new Date(s); t.setFullYear(s.getFullYear()+years);
+  if (t > e){ years--; t.setFullYear(s.getFullYear()+years); }
+
+  let months = e.getMonth() - t.getMonth();
+  t.setMonth(t.getMonth()+months);
+  if (t > e){ months--; t.setMonth(t.getMonth()+months); }
+
+  let days = Math.floor((e - t) / 86400000);
+  t.setDate(t.getDate()+days);
+
+  let rem = e - t;
+  let hours = Math.floor(rem/3600000); rem -= hours*3600000;
+  let minutes = Math.floor(rem/60000); rem -= minutes*60000;
+  let seconds = Math.floor(rem/1000); rem -= seconds*1000;
+  let ms = Math.floor(rem);
+
+  return {sign, years, months, days, hours, minutes, seconds, ms};
+}
+const fmtYMD = (d)=>`${d.years}y ${d.months}m ${d.days}d`;
+const pad2 = (n)=>String(n).padStart(2,'0');
+const pad3 = (n)=>String(n).padStart(3,'0');
+
+/* ------------------- Domain Logic (ported) ------------------- */
+function firstDateAgeReached(birth, targetYears){ return addYears(birth, targetYears); }
+function firstDateServiceReached(hire, yrs){ return addYears(hire, yrs); }
+
+function retirementDateTierI(birth, hire){
+  const pathA = maxDate(firstDateAgeReached(birth,55), firstDateServiceReached(hire,25));
+  const pathB = maxDate(firstDateAgeReached(birth,60), firstDateServiceReached(hire,8));
+  return minDate(pathA, pathB);
+}
+function retirementDateTierII(birth, hire){
+  return maxDate(firstDateAgeReached(birth,62), firstDateServiceReached(hire,10));
+}
+
+function nonrepLeave(yos){
+  if (yos <= 4)  return {hours:200, days:25};
+  if (yos <= 10) return {hours:240, days:30};
+  if (yos <= 15) return {hours:248, days:31};
+  if (yos <= 17) return {hours:256, days:32};
+  if (yos === 18) return {hours:264, days:33};
+  if (yos === 19) return {hours:272, days:34};
+  return {hours:280, days:35};
+}
+function repLeave(yos){
+  if (yos <= 4)  return {hours:160, days:20};
+  if (yos <= 10) return {hours:240, days:30};
+  if (yos <= 15) return {hours:248, days:31};
+  if (yos <= 17) return {hours:256, days:32};
+  if (yos === 18) return {hours:264, days:33};
+  if (yos === 19) return {hours:272, days:34};
+  return {hours:280, days:35};
+}
+const milestones = [5,11,16,18,19,20];
+function nextNonrepMilestone(yos){ for (const m of milestones){ if (yos < m) return m; } return null; }
+function nextRepMilestone(yos){ for (const m of milestones){ if (yos < m) return m; } return null; }
+
+function retentionAward(yos){
+  if (yos < 2) return 300;
+  if (yos === 2) return 500;
+  if (3 <= yos && yos <= 6) return 600;
+  if (yos === 7) return 700;
+  if (yos === 8) return 800;
+  if (yos === 9) return 900;
+  if (yos === 10) return 1000;
+  if (yos === 11) return 1100;
+  return 1400;
+}
+function currentPeriodEndSept30(now){
+  const end = new Date(now.getFullYear(), 8, 30, 0,0,0,0); // Sept=8
+  return (now <= end) ? end : new Date(now.getFullYear()+1, 8, 30, 0,0,0,0);
+}
+
+const DEATH_BRACKETS = [
+  [30,2000],[25,1500],[20,960],[15,600],[10,400]
+];
+function deathBenefit(yos){
+  for (const [yrs, amt] of DEATH_BRACKETS){ if (yos >= yrs) return amt; }
+  return 0;
+}
+function nextDeathMilestone(yos){
+  for (let i=DEATH_BRACKETS.length-1;i>=0;i--){
+    const yrs = DEATH_BRACKETS[i][0];
+    if (yos < yrs) return yrs;
+  }
+  return null;
+}
+
+function tierCompFactor(tier){ return (tier === "I") ? 0.0225 : 0.015; }
+function benefitEstimate(tier, fac, yosAtRet){
+  const factor = tierCompFactor(tier);
+  const rawPct = factor * yosAtRet;
+  const appliedPct = Math.min(rawPct, 0.75);
+  const annual = appliedPct * fac;
+  return {
+    annual,
+    monthly: annual/12,
+    rawPct,
+    appliedPct,
+    capped: rawPct > 0.75
+  };
+}
+
+/* ----------- App State ----------- */
+const state = {
+  isNonrep:true,
+  tier:"I",
+  hasPE:false,
+  birth:null,
+  hire:null,
+  retirementDt:null,
+  vestingDt:null,
+  periodEnd:null,
+  timerId:null
+};
+
+/* ------------------- Setup handlers ------------------- */
+$("#startBtn").addEventListener("click", ()=>{
+  const status = document.querySelector('input[name="status"]:checked')?.value || "nonrep";
+  state.isNonrep = (status === "nonrep");
+  state.tier = document.querySelector('input[name="tier"]:checked')?.value || "I";
+  state.hasPE = $("#hasPE").checked;
+
+  const birthStr = $("#birthDate").value;
+  const hireStr  = $("#hireDate").value;
+  if (!birthStr || !hireStr){
+    alert("Please enter both Birth date and Hire date.");
+    return;
+  }
+  const birth = new Date(birthStr);
+  const hire  = new Date(hireStr);
+  if (isNaN(+birth) || isNaN(+hire)){
+    alert("Invalid dates. Please use the date pickers or YYYY-MM-DD.");
+    return;
+  }
+  state.birth = new Date(birth.getFullYear(), birth.getMonth(), birth.getDate());
+  state.hire  = new Date(hire.getFullYear(),  hire.getMonth(),  hire.getDate());
+
+  // Compute retirement + vesting
+  if (state.tier === "I"){
+    state.retirementDt = retirementDateTierI(state.birth, state.hire);
+    state.vestingDt = addYears(state.hire, 8);
+  }else{
+    state.retirementDt = retirementDateTierII(state.birth, state.hire);
+    state.vestingDt = addYears(state.hire, 10);
+  }
+  state.periodEnd = currentPeriodEndSept30(new Date());
+
+  // PE line
+  if (state.hasPE){
+    const amt = state.isNonrep ? 1500 : 750;
+    $("#peLine").style.display = "block";
+    $("#peLine").textContent = `PE Stipend: ${money(amt)}/year (${state.isNonrep?'Non-Rep':'Rep'})  •  ≈ ${money2(amt/26)} per check`;
+  }else{
+    $("#peLine").style.display = "none";
+  }
+
+  // Fill static captions
+  $("#retireCaption").textContent = `Countdown to Retirement (Tier ${state.tier})`;
+  $("#eligDateLine").textContent = `Retirement Eligibility Date: ${fmtDateLong(state.retirementDt)}`;
+  $("#vestingDate").textContent = `Vesting Date: ${fmtDateLong(state.vestingDt)}`;
+
+  // Estimator: set earliest by default
+  $("#useEarliest").checked = true;
+  $("#plannedRet").disabled = true;
+  $("#plannedRet").value = state.retirementDt.toISOString().slice(0,10);
+
+  // Reveal dashboard
+  $("#setup").style.display = "none";
+  $("#dashboard").style.display = "block";
+
+  // Start live updates
+  if (state.timerId) clearInterval(state.timerId);
+  updateAll(); // immediate first render
+  state.timerId = setInterval(updateAll, 100);
+});
+
+/* planned retirement input toggle */
+$("#useEarliest").addEventListener("change", (e)=>{
+  const use = e.target.checked;
+  $("#plannedRet").disabled = use;
+  if (use) $("#plannedRet").value = state.retirementDt?.toISOString().slice(0,10) || "";
+});
+
+/* estimator action */
+$("#estimateBtn").addEventListener("click", ()=>{
+  if (!state.hire || !state.retirementDt){ return; }
+  const useEarliest = $("#useEarliest").checked;
+  let ret = state.retirementDt;
+  if (!useEarliest){
+    const s = $("#plannedRet").value;
+    if (!s){ alert("Please pick a planned retirement date."); return; }
+    const d = new Date(s);
+    if (isNaN(+d)){ alert("Invalid planned retirement date."); return; }
+    ret = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+  const fac = parseFloat($("#fac").value);
+  if (!(fac > 0)){ alert("Enter a positive number for FAC."); return; }
+
+  const rd = diffYMDHMSMs(state.hire, ret);
+  const yosAtRet = rd.years + rd.months/12 + rd.days/365.25;
+
+  if (yosAtRet < 0){
+    alert("Planned retirement date is before your hire date.");
+    return;
+  }
+  const est = benefitEstimate(state.tier, fac, yosAtRet);
+  $("#annualBen").textContent = `Annual Benefit: ${money2(est.annual)}${est.capped?" (CAP APPLIED at 75%)":""}`;
+  $("#monthlyBen").textContent = `Monthly Benefit: ${money2(est.monthly)}`;
+
+  $("#benDetails").textContent =
+    `Inputs → FAC: ${money2(fac)} • Retirement date: ${fmtDate(ret)} • `
+    + `YOS at retirement: ${yosAtRet.toFixed(2)}\n`
+    + `Raw % of FAC: ${(est.rawPct*100).toFixed(2)}% • `
+    + `Applied %: ${(est.appliedPct*100).toFixed(2)}% `
+    + `(Tier ${state.tier} factor = ${(tierCompFactor(state.tier)*100).toFixed(2)}%/YOS)`;
+});
+
+/* ------------------- Live update loop ------------------- */
+function updateAll(){
+  const now = new Date();
+
+  // Years of Service live
+  const yos = diffYMDHMSMs(state.hire, now);
+  $("#yos").textContent =
+    `${yos.years}y ${yos.months}m ${yos.days}d `
+    + `${pad2(yos.hours)}h ${pad2(yos.minutes)}m ${pad2(yos.seconds)}s ${pad3(yos.ms)}ms`;
+
+  // Retirement countdown
+  if (now >= state.retirementDt){
+    $("#retireCountdown").textContent = "🎉 TIME TO RETIRE! 🎉";
+  }else{
+    const rem = diffYMDHMSMs(now, state.retirementDt);
+    $("#retireCountdown").textContent =
+      `${rem.years}y ${rem.months}m ${rem.days}d `
+      + `${pad2(rem.hours)}h ${pad2(rem.minutes)}m ${pad2(rem.seconds)}s ${pad3(rem.ms)}ms`;
+  }
+
+  // Vesting line
+  if (now >= state.vestingDt){
+    $("#vesting").textContent = "🎖️ VESTED 🎖️";
+  }else{
+    const v = diffYMDHMSMs(now, state.vestingDt);
+    $("#vesting").textContent = `Countdown to Vesting: ${fmtYMD(v)}`;
+  }
+
+  // Vacation
+  const yearsCompleted = yos.years;
+  let leave, nextM;
+  if (state.isNonrep){
+    leave = nonrepLeave(yearsCompleted);
+    nextM = nextNonrepMilestone(yearsCompleted);
+    $("#leaveLine").textContent = `Non-Rep Annual Leave: ${leave.hours} hours  (${leave.days} days)`;
+  }else{
+    leave = repLeave(yearsCompleted);
+    nextM = nextRepMilestone(yearsCompleted);
+    $("#leaveLine").textContent = `Rep Annual Leave: ${leave.hours} hours  (${leave.days} days)`;
+  }
+  if (nextM === null){
+    $("#nextLeave").textContent = "Max schedule reached (20+ years).";
+  }else{
+    const nextAnniv = addYears(state.hire, nextM);
+    const d = diffYMDHMSMs(now, nextAnniv);
+    $("#nextLeave").textContent =
+      `Next increase at ${nextM} YOS on ${fmtDateLong(nextAnniv)}  —  ${fmtYMD(d)}`;
+  }
+
+  // Retention
+  if (now > state.periodEnd){
+    state.periodEnd = currentPeriodEndSept30(now);
+  }
+  const yosAtEnd = diffYMDHMSMs(state.hire, state.periodEnd).years;
+  const rAmt = retentionAward(Math.max(0, yosAtEnd));
+  const rd = diffYMDHMSMs(now, state.periodEnd);
+  $("#retentionLine").textContent =
+    `Retention (as of ${fmtDate(state.periodEnd, false)}):  ${money(rAmt)}`;
+  $("#retentionCountdown").textContent =
+    `Time until period end: ${fmtYMD(rd)}`;
+
+  // Death benefit
+  const amtNow = deathBenefit(yearsCompleted);
+  $("#deathNow").textContent = `Death Benefit (if retired today):  ${money(amtNow)}`;
+
+  const yosAtRet = diffYMDHMSMs(state.hire, state.retirementDt).years;
+  const amtRet = deathBenefit(Math.max(0, yosAtRet));
+  $("#deathRet").textContent = `Projected at retirement eligibility: ${money(amtRet)}  (YOS then: ${yosAtRet})`;
+
+  const nxt = nextDeathMilestone(yearsCompleted);
+  if (nxt === null){
+    $("#deathNext").textContent = "Death benefit already at maximum schedule (30+ years).";
+  }else{
+    const nxtDate = addYears(state.hire, nxt);
+    const dd = diffYMDHMSMs(now, nxtDate);
+    $("#deathNext").textContent =
+      `Next death-benefit bump at ${nxt} YOS on ${fmtDateLong(nxtDate)}  —  ${fmtYMD(dd)}`;
+  }
+}
+
+/* ------------------- Optional faded logo ------------------- */
+const toggleLogo = $("#toggleLogo");
+const pickLogoBtn = $("#pickLogo");
+const logoFile = $("#logoFile");
+toggleLogo.addEventListener("change", ()=>{
+  const on = toggleLogo.checked;
+  $("#logoBg").innerHTML = "";
+  pickLogoBtn.style.display = on ? "inline-block" : "none";
+});
+pickLogoBtn.addEventListener("click", ()=> logoFile.click());
+logoFile.addEventListener("change", (e)=>{
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  $("#logoBg").innerHTML = `<img src="${url}" alt="Logo background" />`;
+});
+</script>
+</body>
+</html>
